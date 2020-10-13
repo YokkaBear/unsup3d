@@ -1,0 +1,36 @@
+## train synface_sketch_2
+## trainer
+run_train: true
+num_epochs: 30  # origin=30
+batch_size: 64  # origin=64 causes out of memory -> 32 -> 16
+checkpoint_dir: results/synface_sketch_2  # keep the same name as the dataset
+save_checkpoint_freq: 1
+keep_num_checkpoint: 30  # keep every single model
+resume: true
+use_logger: true
+log_freq: 500
+
+## dataloader
+num_workers: 4
+image_size: 64  # origin=64, change to 256
+# crop: 170  # origin=170, change to 256->None, try no crop: OK
+load_gt_depth: true
+paired_data_dir_names: ['image', 'depth']  # gaidong
+paired_data_filename_diff: ['image', 'depth']  # gaidong
+train_val_data_dir: data/synface_sketch_2
+
+## model
+model_name: unsup3d_synface_sketch_2
+min_depth: 0.9
+max_depth: 1.1
+xyz_rotation_range: 60  # (-r,r) in degrees
+xy_translation_range: 0.1  # (-t,t) in 3D
+z_translation_range: 0  # (-t,t) in 3D
+lam_perc: 1
+lam_flip: 0.5
+lr: 0.0001
+
+## renderer
+rot_center_depth: 1.0
+fov: 10  # in degrees
+tex_cube_size: 2

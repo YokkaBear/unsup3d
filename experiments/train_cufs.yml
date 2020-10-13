@@ -1,0 +1,36 @@
+## train cufs_all_photos
+## trainer
+run_train: true
+num_epochs: 800  # 30 originally -> 1000 -> 500
+batch_size: 64  # 64 originally maybe too large for small dataset? no
+checkpoint_dir: results/cufs_all_photos
+save_checkpoint_freq: 10
+keep_num_checkpoint: 2  # 2 originally change to leave 30 models from epoch 330~360
+resume: true
+use_logger: true
+log_freq: 10  # 10->1 update every 1 epoch
+
+## dataloader
+num_workers: 4  # 4 originally maybe too large? no
+image_size: 64  # image resize needed? no
+crop: 170
+load_gt_depth: true
+paired_data_dir_names: ['image', 'depth']
+paired_data_filename_diff: ['image', 'depth']
+train_val_data_dir: data/cufs_all_photos
+
+## model
+model_name: unsup3d_cufs_all_photos
+min_depth: 0.9
+max_depth: 1.1
+xyz_rotation_range: 60  # (-r,r) in degrees
+xy_translation_range: 0.1  # (-t,t) in 3D
+z_translation_range: 0  # (-t,t) in 3D
+lam_perc: 1
+lam_flip: 0.5
+lr: 0.0001
+
+## renderer
+rot_center_depth: 1.0
+fov: 10  # in degrees
+tex_cube_size: 2
