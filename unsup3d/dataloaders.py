@@ -3,6 +3,7 @@ import torchvision.transforms as tfs
 import torch.utils.data
 import numpy as np
 from PIL import Image
+import pdb
 
 
 def get_data_loaders(cfgs):
@@ -17,8 +18,8 @@ def get_data_loaders(cfgs):
     test_data_dir = cfgs.get('test_data_dir', './data/test')
 
     load_gt_depth = cfgs.get('load_gt_depth', False)
-    AB_dnames = cfgs.get('paired_data_dir_names', ['A', 'B'])
-    AB_fnames = cfgs.get('paired_data_filename_diff', None)
+    AB_dnames = cfgs.get('paired_data_dir_names', ['A', 'B'])  # ['image', 'depth']
+    AB_fnames = cfgs.get('paired_data_filename_diff', None)  # ['image', 'depth']
 
     train_loader = val_loader = test_loader = None
     if load_gt_depth:
@@ -27,7 +28,7 @@ def get_data_loaders(cfgs):
         get_loader = lambda **kargs: get_image_loader(**kargs, batch_size=batch_size, image_size=image_size, crop=crop)
 
     if run_train:
-        train_data_dir = os.path.join(train_val_data_dir, "train")
+        train_data_dir = os.path.join(train_val_data_dir, "train")  # data/cufs/train
         val_data_dir = os.path.join(train_val_data_dir, "val")
         assert os.path.isdir(train_data_dir), "Training data directory does not exist: %s" %train_data_dir
         assert os.path.isdir(val_data_dir), "Validation data directory does not exist: %s" %val_data_dir
@@ -112,25 +113,41 @@ def get_image_loader(data_dir, is_validation=False,
 
 ## paired AB image dataset ##
 def make_paied_dataset(dir, AB_dnames=None, AB_fnames=None):
-    A_dname, B_dname = AB_dnames or ('A', 'B')
-    dir_A = os.path.join(dir, A_dname)
-    dir_B = os.path.join(dir, B_dname)
+    A_dname, B_dname = AB_dnames or ('A', 'B')  # AB_dnames传进来的是一个list dname = directory name
+    dir_A = os.path.join(dir, A_dname)  # data/cufs/train/image ok (不是相对路径的事，os能找得到)
+    dir_B = os.path.join(dir, B_dname)  # data/cufs/train/depth ok
+    # pdb.set_trace()  # bp2
+    print(dir_A + '\n' + dir_B)  # db2  ok
+    # db3 start ok
+    # files_A = os.listdir(dir_A)
+    # print(files_A)
+    # files_B = os.listdir(dir_B)
+    # print(files_B)
+    # db3 finish
     assert os.path.isdir(dir_A), '%s is not a valid directory' % dir_A
     assert os.path.isdir(dir_B), '%s is not a valid directory' % dir_B
 
+    # gaidong 没进到这个循环里来？
     images = []
-    for root_A, _, fnames_A in sorted(os.walk(dir_A)):
-        for fname_A in sorted(fnames_A):
+    # pdb.set_trace()  # bp4
+    for root_A, _, fnames_A in sorted(os.walk(dir_A)):  # root_A: 文件夹名; _：文件夹中的文件夹列表; fnames_A：文件夹中文件列表
+        # db4
+        # print(root_A)
+        # print(fnames_A)
+        for fname_A in sorted(fnames_A):  # fname = file name
             if is_image_file(fname_A):
-                path_A = os.path.join(root_A, fname_A)
+                path_A = os.path.join(root_A, fname_A)  # construct path_A for one image ok
                 root_B = root_A.replace(dir_A, dir_B, 1)
-                if AB_fnames is not None:
-                    fname_B = fname_A.replace(*AB_fnames)
+                if AB_fnames is not None:  # AB_fnames = ['image', 'depth']
+                    fname_B = fname_A.replace(*AB_fnames)  # *的作用：字符串交替，将fname_A中的image换成depth
+                    # fname_B = fname_B.replace('.jpg', '_depth.png')  # cufs数据集专用 fname_B更正成depth中的正确文件名
                 else:
                     fname_B = fname_A
-                path_B = os.path.join(root_B, fname_B)
+                path_B = os.path.join(root_B, fname_B)  # construct path_B for depth map of the image 这步错了！！！
                 if os.path.isfile(path_B):
-                    images.append((path_A, path_B))
+                    images.append((path_A, path_B))  # add a paired tuple to the list
+                    # pdb.set_trace()  # bp3
+                    # print((path_A, path_B))
     return images
 
 
@@ -138,7 +155,7 @@ class PairedDataset(torch.utils.data.Dataset):
     def __init__(self, data_dir, image_size=256, crop=None, is_validation=False, AB_dnames=None, AB_fnames=None):
         super(PairedDataset, self).__init__()
         self.root = data_dir
-        self.paths = make_paied_dataset(data_dir, AB_dnames=AB_dnames, AB_fnames=AB_fnames)
+        self.paths = make_paied_dataset(data_dir, AB_dnames=AB_dnames, AB_fnames=AB_fnames)  # note: likely problematic
         self.size = len(self.paths)
         self.image_size = image_size
         self.crop = crop
@@ -175,10 +192,12 @@ def get_paired_image_loader(data_dir, is_validation=False,
 
     dataset = PairedDataset(data_dir, image_size=image_size, crop=crop, \
         is_validation=is_validation, AB_dnames=AB_dnames, AB_fnames=AB_fnames)
+    print(len(dataset))  # db1 len = 0. error occured before
+    # pdb.set_trace()  # bp1
     loader = torch.utils.data.DataLoader(
         dataset,
         batch_size=batch_size,
-        shuffle=not is_validation,
+        shuffle=not is_validation,  # during train, is_validation = False
         num_workers=num_workers,
         pin_memory=True
     )
