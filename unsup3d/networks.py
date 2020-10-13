@@ -29,7 +29,7 @@ class Encoder(nn.Module):
         return self.network(input).reshape(input.size(0),-1)
 
 
-class EDDeconv(nn.Module):
+class EDDeconv(nn.Module):  # EDDeconv = Encoder and Decoder with Deconv layer
     def __init__(self, cin, cout, zdim=128, nf=64, activation=nn.Tanh):
         super(EDDeconv, self).__init__()
         ## downsampling
@@ -145,7 +145,8 @@ class PerceptualLoss(nn.Module):
         self.register_buffer('mean_rgb', mean_rgb)
         self.register_buffer('std_rgb', std_rgb)
 
-        vgg_pretrained_features = torchvision.models.vgg16(pretrained=True).features
+        vgg_pretrained_features = torchvision.models.vgg16(pretrained=True).features # origin: vgg16
+        # vgg_pretrained_features = torchvision.models.vgg19(pretrained=True).features  # try vgg19 to see any improve: no improvements
         self.slice1 = nn.Sequential()
         self.slice2 = nn.Sequential()
         self.slice3 = nn.Sequential()
