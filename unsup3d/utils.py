@@ -156,7 +156,7 @@ def save_txt(out_fold, data, prefix='', suffix='', sep_folder=True, ext='.txt'):
     [np.savetxt(os.path.join(out_fold, prefix+'%05d'%(i+offset)+suffix+ext), d, fmt='%.6f', delimiter=', ') for i,d in enumerate(data)]
 
 
-def compute_sc_inv_err(d_pred, d_gt, mask=None):
+def compute_sc_inv_err(d_pred, d_gt, mask=None):  # compute SIDE
     b = d_pred.size(0)
     diff = d_pred - d_gt
     if mask is not None:
@@ -169,7 +169,7 @@ def compute_sc_inv_err(d_pred, d_gt, mask=None):
     return score  # masked error maps
 
 
-def compute_angular_distance(n1, n2, mask=None):
+def compute_angular_distance(n1, n2, mask=None):  # compute MAD
     dist = (n1*n2).sum(3).clamp(-1,1).acos() /np.pi*180
     return dist*mask if mask is not None else dist
 
